@@ -10,4 +10,4 @@ Here are some repositories that I have contributed.
 
 #### Analysis
 
-[![HydroGest's GitHub stats](https://github-readme-stats.vercel.app/api?username=HydroGest)]()
+[![HydroGest's GitHub stats](https://github-readme-stats.vercel.app/api?username=HydroGest&show_icons=true)]()
