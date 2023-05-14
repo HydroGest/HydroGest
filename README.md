@@ -7,6 +7,7 @@ Here are some repositories that I have contributed.
 
 - [HydroGest/Weblocks](HydroGest/Weblocks)
 - [HydroGest/WhoIsPeeping](HydroGest/WhoIsPeeping)
+- [HydroGest/PoPoBot](HydroGest/PopoBot)
 
 #### Analysis
 
