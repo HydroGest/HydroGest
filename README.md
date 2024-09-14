@@ -1,13 +1,17 @@
 ### Hi there 👋
 
-I'm HydroGest, aka MarkChai, a ~~Web Artisan,~~ CS learner.
+I'm HydroGest, aka MarkChai, a ~~Web Artisan,~~ CS learner and a Minecraft server owner.
+
+Blog: https://blog.mkc.icu
 
 #### My works:
 Here are some repositories that I have contributed.
 
-- [HydroGest/YesImBot](HydroGest/YesImBot)
-- [HydroGest/WhoIsPeeping](HydroGest/WhoIsPeeping)
-- [HydroGest/PoPoBot](HydroGest/PopoBot)
+- [HydroGest/YesImBot](https://github.com/HydroGest/YesImBot)
+- [HydroGest/WhoIsPeeping](https://github.com/HydroGest/WhoIsPeeping)
+- [HydroGest/PoPoBot](https://github.com/HydroGest/PopoBot)
+
+... and you can also visit my Minecraft server: mc.lunarine.cc
 
 #### Analysis
 
