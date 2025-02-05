@@ -8,8 +8,7 @@ Blog: https://blog.mkc.icu
 Here are some repositories that I have contributed.
 
 - [HydroGest/YesImBot](https://github.com/HydroGest/YesImBot)
-- [HydroGest/WhoIsPeeping](https://github.com/HydroGest/WhoIsPeeping)
-- [HydroGest/PoPoBot](https://github.com/HydroGest/PopoBot)
+- [UniScratch/GitScratch-Frontend](https://github.com/UniScratch/GitScratch-Frontend)
 
 ... and you can also visit my Minecraft server: mc.lunarine.cc
 
