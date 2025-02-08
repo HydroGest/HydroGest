@@ -1,7 +1,9 @@
 ### 👋 Hello World!  I'm HydroGest / MarkChai 
 
 `💻 CS Learner` | `🎮 Minecraft Architect` | `🤖 AI Enthusiast`  
-`📝` [Tech Blog](https://blog.mkc.icu)  `🌌` [Lunarine Server](mc.lunarine.cc)  
+`📝` [Tech Blog](https://blog.mkc.icu)  `🌌` [THFLS Computer Club](https://www.thfls.club/)  
+
+快来我开的 Minecraft 生电服务器：945228330
 
 ---
 
