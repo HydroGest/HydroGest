@@ -5,24 +5,29 @@ import re
 from datetime import datetime
 from collections import Counter
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 GITHUB_USERNAME = "HydroGest"
 ALIAS_YURIKALE = "YuriKale / 羽衣甘蓝"
 ALIAS_MARKCHAI = "Markchai"
 
 def fetch_github_data(endpoint):
-    url = f"[https://api.github.com/](https://api.github.com/){endpoint}"
+    url = f"https://api.github.com/{endpoint}"
     req = Request(url)
     token = os.environ.get("GITHUB_TOKEN")
+    
+    # 升级为现代 Bearer 鉴权协议，防止 401/403 限制
     if token:
-        req.add_header("Authorization", f"token {token}")
+        req.add_header("Authorization", f"Bearer {token}")
     req.add_header("User-Agent", "Advanced-TUI-Profile-Generator")
+    
     try:
         with urlopen(req) as response:
             return json.loads(response.read().decode())
+    except HTTPError as e:
+        raise RuntimeError(f"HTTP_{e.code}_{e.reason}")
     except Exception as e:
-        print(f"[ERROR] Failed to fetch {endpoint}: {e}")
-        return None
+        raise RuntimeError(f"ConnError_{str(e)}")
 
 def draw_bar(value, max_value, length=18):
     if max_value == 0: return "░" * length
@@ -30,22 +35,21 @@ def draw_bar(value, max_value, length=18):
     return "█" * filled + "░" * (length - filled)
 
 def analyze_profile():
-    # 使用动态拼接逃逸 Markdown 渲染器的截断机制
     bt = "`" * 3
     
-    # 1. 深度拉取多维度数据
-    user_data = fetch_github_data(f"users/{GITHUB_USERNAME}")
-    repos = fetch_github_data(f"users/{GITHUB_USERNAME}/repos?per_page=100&sort=updated") or []
-    events = fetch_github_data(f"users/{GITHUB_USERNAME}/events/public?per_page=100") or []
-    
-    if not user_data:
-        return f"{bt}\n[FATAL] Kernel Panic: Unable to sync with GitHub API Engine.\n{bt}"
+    # 2. 深度数据抓取与高级异常解析
+    try:
+        user_data = fetch_github_data(f"users/{GITHUB_USERNAME}")
+        repos = fetch_github_data(f"users/{GITHUB_USERNAME}/repos?per_page=100&sort=updated") or []
+        events = fetch_github_data(f"users/{GITHUB_USERNAME}/events/public?per_page=100") or []
+    except Exception as kernel_err:
+        # 核心改进：发生 Panic 时直接将具体错误代码打印到 README，杜绝盲盒 Debug
+        return f"{bt}text\n┌────────────────────────────────────────────────────────────────────────────┐\n│ [FATAL] Kernel Panic: Core Sync Engine Demise                              │\n│ Cause : {str(kernel_err).ljust(66)} │\n└────────────────────────────────────────────────────────────────────────────┘\n{bt}"
 
-    # 2. 数据科学层：指标解析
+    # 后续高精度 TUI 渲染矩阵保持不变...
     total_stars = sum(repo.get("stargazers_count", 0) for repo in repos)
     total_forks = sum(repo.get("forks_count", 0) for repo in repos)
     
-    # 语言熵（Shannon Entropy）计算与分布
     languages = Counter()
     for repo in repos:
         if repo.get("language"):
@@ -58,12 +62,10 @@ def analyze_profile():
             p = count / total_lang_repos
             lang_entropy -= p * math.log(p)
             
-    # 属性定性 (根据香农熵评估技术栈型态)
     if lang_entropy < 0.6:   stack_type = "Hyper-Focused Specialist"
     elif lang_entropy < 1.3: stack_type = "Balanced Polymath"
     else:                    stack_type = "High-Entropy FullStack Generalist"
 
-    # 优化后的 Commit 意图语义清洗算法
     commit_verbs = []
     commit_hours = []
     for event in events:
@@ -75,14 +77,12 @@ def analyze_profile():
             
             for c in event.get("payload", {}).get("commits", []):
                 msg = c.get("message", "").strip()
-                # 兼容 Conventional Commits 规范
                 match = re.match(r'^([a-zA-Z]+)(?:\([^)]+\))?!?:?', msg)
                 if match:
                     verb = match.group(1).lower()
                     if len(verb) > 1 and verb not in ['the', 'and', 'for', 'version']:
                         commit_verbs.append(verb)
 
-    # 脑电波/昼夜作息方差分析
     time_slots = {"00-06": 0, "06-12": 0, "12-18": 0, "18-24": 0}
     for h in commit_hours:
         if 0 <= h < 6: time_slots["00-06"] += 1
@@ -102,7 +102,6 @@ def analyze_profile():
     top_verbs = Counter(commit_verbs).most_common(3)
     intent_str = ", ".join([f"{k}({v})" for k, v in top_verbs]) if top_verbs else "coding(active)"
 
-    # 3. TUI 高级渲染矩阵 (严格控制 78 字符宽度以防溢出换行)
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
     top_langs = languages.most_common(3)
     max_lang_count = max(languages.values()) if languages else 1
@@ -148,4 +147,4 @@ if __name__ == "__main__":
     content = analyze_profile()
     with open("README.md", "w", encoding="utf-8") as f:
         f.write(content)
-    print("[SUCCESS] TUI Panel rendered and synchronization complete.")
+    print("[SUCCESS] TUI Panel rendered.")
