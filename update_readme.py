@@ -139,3 +139,63 @@ def analyze_profile():
     top_langs = languages.most_common(6) # 扩展到前 6 种语言显示
     max_lang_count = max(languages.values()) if languages else 1
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    # 开始构建高度对齐的无框控制台报表
+    output = []
+    output.append("========================================================================")
+    output.append(f"HYDRO-OS v4.0.0-PRO // ADVANCED TELEMETRY & DATA SCIENCE ENGINE")
+    output.append("========================================================================\n")
+    
+    output.append("[System Identity & Temporal State]")
+    output.append(f"  User:          {visual_ljust(GITHUB_USERNAME, 30)}")
+    output.append(f"  Alias:         {visual_ljust(ALIAS_YURIKALE, 30)}")
+    output.append(f"  Legacy:        {visual_ljust(ALIAS_MARKCHAI, 30)}")
+    output.append(f"  Clock Engine:  {current_time}\n")
+    
+    output.append("[Core Mathematical Vectors]")
+    output.append(f"  Public Repos:  {str(user_data.get('public_repos', 0)).ljust(10)}  Total Stars:         {str(total_stars).ljust(10)}")
+    output.append(f"  Total Forks:   {str(total_forks).ljust(10)}  Language Shannon H:  {f'{lang_entropy:.2f}'}")
+    output.append(f"  Gini Index G:  {f'{gini_index:.2f}'.ljust(10)}  Circadian Entropy:   {f'{time_entropy:.2f}'}")
+    output.append(f"  Schedule Mode: {chaos_rating}\n")
+    
+    output.append("[Advanced Stack Distribution Vector (Top 6)]")
+    for lang, count in top_langs:
+        pct = (count / total_lang_repos) * 100 if total_lang_repos > 0 else 0
+        lang_label = visual_ljust(lang, 15)
+        output.append(f"  {lang_label} [{draw_bar(count, max_lang_count, 30)}] {pct:5.1f}% ({count} repos)")
+    output.append("")
+        
+    output.append("[Circadian Activity Rhythm]")
+    slots_config = [
+        ("00-06 Midnight", "00-06"),
+        ("06-12 Morning", "06-12"),
+        ("12-18 Afternoon", "12-18"),
+        ("18-24 Evening", "18-24")
+    ]
+    for label, key in slots_config:
+        slot_label = visual_ljust(label, 16)
+        output.append(f"  {slot_label} [{draw_bar(time_slots[key], max_slot_val, 30)}] {str(time_slots[key]).rjust(3)} commits")
+    output.append("")
+        
+    output.append("[Semantic Developer Intent Vector]")
+    total_intents = sum(intent_vectors.values())
+    max_intent = max(intent_vectors.values()) if total_intents > 0 else 1
+    for category, count in intent_vectors.items():
+        pct = (count / total_intents) * 100 if total_intents > 0 else 0
+        cat_label = visual_ljust(category, 16)
+        output.append(f"  {cat_label} [{draw_bar(count, max_intent, 30)}] {pct:5.1f}%")
+        
+    output.append("\n[brain.service - Runtime Subsystems]")
+    output.append(f"  Status:        active (running) since 2013-09-01 (Minecraft Server Genesis)")
+    output.append(f"  Sub-Layers:    [Paper Plugin Architecture] [Koishi Bot Framework] [Vue Ecosystem]")
+    output.append(f"  SysAdmin Caps: [Linux Kernel Tuning] [Network Routing Optimization] [OI Background]")
+    output.append("========================================================================")
+
+    tui_body = "\n".join(output)
+    return f"{bt}text\n" + tui_body + f"\n{bt}"
+
+if __name__ == "__main__":
+    content = analyze_profile()
+    with open("README.md", "w", encoding="utf-8") as f:
+        f.write(content)
+    print("[SUCCESS] Data science metrics calculated. TUI updated.")
