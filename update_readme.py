@@ -11,7 +11,7 @@ ALIAS_YURIKALE = "YuriKale / 羽衣甘蓝"
 ALIAS_MARKCHAI = "Markchai"
 
 def fetch_github_data(endpoint):
-    url = f"https://api.github.com/{endpoint}"
+    url = f"[https://api.github.com/](https://api.github.com/){endpoint}"
     req = Request(url)
     token = os.environ.get("GITHUB_TOKEN")
     if token:
@@ -30,14 +30,16 @@ def draw_bar(value, max_value, length=18):
     return "█" * filled + "░" * (length - filled)
 
 def analyze_profile():
+    # 使用动态拼接逃逸 Markdown 渲染器的截断机制
+    bt = "`" * 3
+    
     # 1. 深度拉取多维度数据
     user_data = fetch_github_data(f"users/{GITHUB_USERNAME}")
     repos = fetch_github_data(f"users/{GITHUB_USERNAME}/repos?per_page=100&sort=updated") or []
     events = fetch_github_data(f"users/{GITHUB_USERNAME}/events/public?per_page=100") or []
     
     if not user_data:
-        return "```\n[FATAL] Kernel Panic: Unable to sync with GitHub API Engine.\n
-```"
+        return f"{bt}\n[FATAL] Kernel Panic: Unable to sync with GitHub API Engine.\n{bt}"
 
     # 2. 数据科学层：指标解析
     total_stars = sum(repo.get("stargazers_count", 0) for repo in repos)
@@ -73,7 +75,7 @@ def analyze_profile():
             
             for c in event.get("payload", {}).get("commits", []):
                 msg = c.get("message", "").strip()
-                # 兼容 Conventional Commits 规范 (e.g., "feat(bot): add log")
+                # 兼容 Conventional Commits 规范
                 match = re.match(r'^([a-zA-Z]+)(?:\([^)]+\))?!?:?', msg)
                 if match:
                     verb = match.group(1).lower()
@@ -105,8 +107,7 @@ def analyze_profile():
     top_langs = languages.most_common(3)
     max_lang_count = max(languages.values()) if languages else 1
 
-    tui_output = f"""```text
-┌────────────────────────────────────────────────────────────────────────────┐
+    tui_body = f"""┌────────────────────────────────────────────────────────────────────────────┐
 │  HYDRO-OS v2.6.0-LTS  [SYS: ONLINE]                 METRICS CORE MONITOR   │
 └────────────────────────────────────────────────────────────────────────────┘
 ┌─ [ System Identity ] ──────────────────┐┌─ [ Core Kernel Metrics ] ────────┐
@@ -121,9 +122,9 @@ def analyze_profile():
     for lang, count in top_langs:
         pct = (count / total_lang_repos) * 100 if total_lang_repos > 0 else 0
         bar = draw_bar(count, max_lang_count, length=24)
-        tui_output += f"\n│  - {lang.ljust(12)} [{bar}] {pct:4.1f}%   │"
+        tui_body += f"\n│  - {lang.ljust(12)} [{bar}] {pct:4.1f}%   │"
         
-    tui_output += f"""
+    tui_body += f"""
 └────────────────────────────────────────────────────────────────────────────┘
 ┌─ [ Chronotype & Circadian Activity Rhythm ] ───────────────────────────────┐
 │ Schedule Engine: {chronotype.ljust(57)} │
@@ -139,9 +140,9 @@ def analyze_profile():
 │   Intent: [ {intent_str.ljust(64)} ] │
 │   Flags : [C++] [Python] [Kotlin] [TypeScript] [Linux Kernel Tuning] [OI]   │
 │   Clock : {current_time.ljust(66)} │
-└────────────────────────────────────────────────────────────────────────────┘
-```"""
-    return tui_output
+└────────────────────────────────────────────────────────────────────────────┘"""
+
+    return f"{bt}text\n" + tui_body + f"\n{bt}"
 
 if __name__ == "__main__":
     content = analyze_profile()
