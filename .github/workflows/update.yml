@@ -1,0 +1,31 @@
+name: Update Dynamic Terminal README
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # 每 6 小时自动运行一次分析
+  workflow_dispatch: # 允许手动触发运行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-numeric-version: '3.10'
+
+    - name: Run Analysis Script
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: python update_readme.py
+
+    - name: Commit and Push Changes
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add README.md
+        git diff-index --quiet HEAD || git commit -m "chore: automated terminal state sync [skip ci]"
+        git push
