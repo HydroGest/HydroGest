@@ -38,17 +38,16 @@ def visual_ljust(s, width):
     if w >= width: return s
     return s + " " * (width - w)
 
+# 核心改进 1：采用像素级绝对等宽的几何符号 ■ 和 □
 def draw_bar(value, max_value, length=30):
-    if max_value == 0: return "░" * length
+    if max_value == 0: return "□" * length
     filled = int((value / max_value) * length)
-    return "█" * filled + "░" * (length - filled)
+    return "■" * filled + "□" * (length - filled)
 
-# 数据科学算法：计算语言集中度的基尼系数
 def calculate_gini(languages_counter):
     counts = sorted(list(languages_counter.values()))
     n = len(counts)
     if n <= 1 or sum(counts) == 0: return 0.0
-    # Gini Coefficient 标准计算公式
     num = sum((2 * (i + 1) - n - 1) * val for i, val in enumerate(counts))
     return num / (n * sum(counts))
 
@@ -65,7 +64,6 @@ def analyze_profile():
     total_stars = sum(repo.get("stargazers_count", 0) for repo in repos)
     total_forks = sum(repo.get("forks_count", 0) for repo in repos)
     
-    # 1. 扩充多语言维度统计
     languages = Counter()
     for repo in repos:
         if repo.get("language"):
@@ -73,28 +71,19 @@ def analyze_profile():
             
     total_lang_repos = sum(languages.values())
     
-    # 计算香农语言熵
     lang_entropy = 0.0
     if total_lang_repos > 0:
         for count in languages.values():
             p = count / total_lang_repos
             lang_entropy -= p * math.log(p)
 
-    # 计算技术栈基尼系数
     gini_index = calculate_gini(languages)
 
-    # 2. 深度时序作息与时间熵计算
+    # 核心改进 2：多策略鲁棒语义解析器
     commit_hours = []
     intent_vectors = {"Features": 0, "Fixes": 0, "Refactor": 0, "Maintenance": 0}
     
-    # 语义解析分类器字典映射
-    semantic_map = {
-        r'^(feat|add|create|new|implement)\b': "Features",
-        r'^(fix|bug|patch|issue|prevent)\b': "Fixes",
-        r'^(refactor|clean|perf|opt|optimize|reformat)\b': "Refactor",
-        r'^(chore|docs|style|test|build|ci|deps|update|merge|release)\b': "Maintenance"
-    }
-
+    # 统计时间（不受 API 文本截断影响）
     for event in events:
         if event.get("type") == "PushEvent":
             created_at = event.get("created_at")
@@ -102,17 +91,40 @@ def analyze_profile():
                 dt = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%SZ")
                 commit_hours.append(dt.hour)
             
+            # 尝试从事件流中提取提交信息
             for c in event.get("payload", {}).get("commits", []):
                 msg = c.get("message", "").strip().lower()
-                matched = False
-                for pattern, category in semantic_map.items():
-                    if re.match(pattern, msg):
-                        intent_vectors[category] += 1
-                        matched = True
-                        break
-                if not matched and msg:
-                    # 默认归入通用行为
-                    intent_vectors["Features" if "add" in msg or "make" in msg else "Maintenance"] += 1
+                if msg:
+                    if any(w in msg for w in ["feat", "add", "create", "new", "implement"]):
+                        intent_vectors["Features"] += 1
+                    elif any(w in msg for w in ["fix", "bug", "patch", "issue", "prevent"]):
+                        intent_vectors["Fixes"] += 1
+                    elif any(w in msg for w in ["refactor", "clean", "perf", "opt", "optimize", "reformat"]):
+                        intent_vectors["Refactor"] += 1
+                    else:
+                        intent_vectors["Maintenance"] += 1
+
+    # 核心改进 3：回溯降级子系统（若事件流没有文本，直接闪击真实仓库的 Commit Logs）
+    if sum(intent_vectors.values()) == 0 and repos:
+        print("[WARN] Public events feed text truncated by GitHub. Activating Deep Fallback Engine...")
+        for repo in repos[:3]: # 扫描最近活跃的前 3 个仓库
+            repo_name = repo.get("name")
+            try:
+                commit_list = fetch_github_data(f"repos/{GITHUB_USERNAME}/{repo_name}/commits?author={GITHUB_USERNAME}&per_page=15")
+                if isinstance(commit_list, list):
+                    for commit_obj in commit_list:
+                        msg = commit_obj.get("commit", {}).get("message", "").strip().lower()
+                        if msg:
+                            if any(w in msg for w in ["feat", "add", "create", "new", "implement"]):
+                                intent_vectors["Features"] += 1
+                            elif any(w in msg for w in ["fix", "bug", "patch", "issue", "prevent"]):
+                                intent_vectors["Fixes"] += 1
+                            elif any(w in msg for w in ["refactor", "clean", "perf", "opt", "optimize", "reformat"]):
+                                intent_vectors["Refactor"] += 1
+                            else:
+                                intent_vectors["Maintenance"] += 1
+            except Exception:
+                continue # 某个仓库报错直接跳过，确保核心稳定性
 
     time_slots = {"00-06": 0, "06-12": 0, "12-18": 0, "18-24": 0}
     for h in commit_hours:
@@ -121,7 +133,6 @@ def analyze_profile():
         elif 12 <= h < 18: time_slots["12-18"] += 1
         else: time_slots["18-24"] += 1
         
-    # 计算时间空间分布熵 (Circadian Time Entropy)
     time_entropy = 0.0
     total_commits = sum(time_slots.values())
     if total_commits > 0:
@@ -130,20 +141,22 @@ def analyze_profile():
                 p = count / total_commits
                 time_entropy -= p * math.log(p)
 
-    # 作息定性评价
     if time_entropy > 1.1:    chaos_rating = "High Chaos (Erratic Hacker Schedule)"
     elif time_entropy > 0.6:  chaos_rating = "Semi-Structured Intermittent"
     else:                     chaos_rating = "Strict Monolithic Routine"
 
     max_slot_val = max(time_slots.values()) if commit_hours else 1
-    top_langs = languages.most_common(6) # 扩展到前 6 种语言显示
+    top_langs = languages.most_common(6)
     max_lang_count = max(languages.values()) if languages else 1
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
 
-    # 开始构建高度对齐的无框控制台报表
+    if lang_entropy < 0.6:   stack_type = "Hyper-Focused Specialist"
+    elif lang_entropy < 1.3: stack_type = "Balanced Polymath"
+    else:                    stack_type = "High-Entropy FullStack Generalist"
+
     output = []
     output.append("========================================================================")
-    output.append(f"HYDRO-OS v4.0.0-PRO // ADVANCED TELEMETRY & DATA SCIENCE ENGINE")
+    output.append(f"HYDRO-OS v4.5.0-LTS // TELEMETRY & DATA SCIENCE DASHBOARD")
     output.append("========================================================================\n")
     
     output.append("[System Identity & Temporal State]")
@@ -198,4 +211,4 @@ if __name__ == "__main__":
     content = analyze_profile()
     with open("README.md", "w", encoding="utf-8") as f:
         f.write(content)
-    print("[SUCCESS] Data science metrics calculated. TUI updated.")
+    print("[SUCCESS] Telemetry alignment complete.")
