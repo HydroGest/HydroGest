@@ -15,12 +15,9 @@ def fetch_github_data(endpoint):
     url = f"https://api.github.com/{endpoint}"
     req = Request(url)
     token = os.environ.get("GITHUB_TOKEN")
-    
-    # 升级为现代 Bearer 鉴权协议，防止 401/403 限制
     if token:
         req.add_header("Authorization", f"Bearer {token}")
-    req.add_header("User-Agent", "Advanced-TUI-Profile-Generator")
-    
+    req.add_header("User-Agent", "Advanced-Console-Profile-Generator")
     try:
         with urlopen(req) as response:
             return json.loads(response.read().decode())
@@ -29,7 +26,25 @@ def fetch_github_data(endpoint):
     except Exception as e:
         raise RuntimeError(f"ConnError_{str(e)}")
 
-def draw_bar(value, max_value, length=18):
+# 数据科学级：精确计算包含中文、特殊符号的字符串在终端中的「视觉投影宽度」
+def get_visual_width(s):
+    width = 0
+    for ch in s:
+        # 检测是否属于 CJK 中文字符集范围
+        if '\u4e00' <= ch <= '\u9fff':
+            width += 2
+        else:
+            width += 1
+    return width
+
+# 自适应视觉对齐函数，替代原生 broken 的 ljust
+def visual_ljust(s, width):
+    w = get_visual_width(s)
+    if w >= width:
+        return s
+    return s + " " * (width - w)
+
+def draw_bar(value, max_value, length=30):
     if max_value == 0: return "░" * length
     filled = int((value / max_value) * length)
     return "█" * filled + "░" * (length - filled)
@@ -37,16 +52,13 @@ def draw_bar(value, max_value, length=18):
 def analyze_profile():
     bt = "`" * 3
     
-    # 2. 深度数据抓取与高级异常解析
     try:
         user_data = fetch_github_data(f"users/{GITHUB_USERNAME}")
         repos = fetch_github_data(f"users/{GITHUB_USERNAME}/repos?per_page=100&sort=updated") or []
         events = fetch_github_data(f"users/{GITHUB_USERNAME}/events/public?per_page=100") or []
     except Exception as kernel_err:
-        # 核心改进：发生 Panic 时直接将具体错误代码打印到 README，杜绝盲盒 Debug
-        return f"{bt}text\n┌────────────────────────────────────────────────────────────────────────────┐\n│ [FATAL] Kernel Panic: Core Sync Engine Demise                              │\n│ Cause : {str(kernel_err).ljust(66)} │\n└────────────────────────────────────────────────────────────────────────────┘\n{bt}"
+        return f"{bt}text\n[FATAL] SYSTEM_CORE_PANIC: {str(kernel_err)}\n{bt}"
 
-    # 后续高精度 TUI 渲染矩阵保持不变...
     total_stars = sum(repo.get("stargazers_count", 0) for repo in repos)
     total_forks = sum(repo.get("forks_count", 0) for repo in repos)
     
@@ -106,45 +118,58 @@ def analyze_profile():
     top_langs = languages.most_common(3)
     max_lang_count = max(languages.values()) if languages else 1
 
-    tui_body = f"""┌────────────────────────────────────────────────────────────────────────────┐
-│  HYDRO-OS v2.6.0-LTS  [SYS: ONLINE]                 METRICS CORE MONITOR   │
-└────────────────────────────────────────────────────────────────────────────┘
-┌─ [ System Identity ] ──────────────────┐┌─ [ Core Kernel Metrics ] ────────┐
-│ User   : {GITHUB_USERNAME.ljust(29)} ││ Public Repos : {str(user_data.get('public_repos', 0)).ljust(18)} │
-│ Alias  : {ALIAS_YURIKALE.ljust(29)} ││ Total Stars  : {str(total_stars).ljust(18)} │
-│ Legacy : {ALIAS_MARKCHAI.ljust(29)} ││ Total Forks  : {str(total_forks).ljust(18)} │
-│ Status : Incoming CS Undergrad         ││ Tech Entropy : H={f"{lang_entropy:.2f}".ljust(16)} │
-└────────────────────────────────────────┘└──────────────────────────────────┘
-┌─ [ Stack Distribution Vector & Complexity Analysis ] ──────────────────────┐
-│ Architecture Profile: {stack_type.ljust(52)} │
-│                                                                            │"""
+    # 开始构建纯净扁平化终端流输出
+    output = []
+    output.append("========================================================================")
+    output.append(f"HYDRO-OS v3.0.0-UNBOXED // SYSTEM DIAGNOSTIC REPORT ENGINE")
+    output.append("========================================================================\n")
+    
+    output.append("[System Identity]")
+    output.append(f"  User:         {visual_ljust(GITHUB_USERNAME, 30)}")
+    output.append(f"  Alias:        {visual_ljust(ALIAS_YURIKALE, 30)}")
+    output.append(f"  Legacy:       {visual_ljust(ALIAS_MARKCHAI, 30)}")
+    output.append(f"  Status:       Incoming CS Undergrad")
+    output.append(f"  Clock:        {current_time}\n")
+    
+    output.append("[Core Kernel Metrics]")
+    output.append(f"  Public Repos: {str(user_data.get('public_repos', 0)).ljust(10)}  Total Stars:  {str(total_stars).ljust(10)}")
+    output.append(f"  Total Forks:  {str(total_forks).ljust(10)}  Tech Entropy: H={f'{lang_entropy:.2f}'}")
+    output.append(f"  Architecture: {stack_type}\n")
+    
+    output.append("[Stack Distribution Vector]")
     for lang, count in top_langs:
         pct = (count / total_lang_repos) * 100 if total_lang_repos > 0 else 0
-        bar = draw_bar(count, max_lang_count, length=24)
-        tui_body += f"\n│  - {lang.ljust(12)} [{bar}] {pct:4.1f}%   │"
+        # 对齐语言标签(长14)，确保进度条 [ 起点绝对一致，总长统一为 30
+        lang_label = visual_ljust(lang, 14)
+        output.append(f"  {lang_label} [{draw_bar(count, max_lang_count, 30)}] {pct:5.1f}%")
+    output.append("")
         
-    tui_body += f"""
-└────────────────────────────────────────────────────────────────────────────┘
-┌─ [ Chronotype & Circadian Activity Rhythm ] ───────────────────────────────┐
-│ Schedule Engine: {chronotype.ljust(57)} │
-│                                                                            │
-│  Midnight (00-06)  [{draw_bar(time_slots["00-06"], max_slot_val, 28)}] {time_slots["00-06"]:3d} commits  │
-│  Morning  (06-12)  [{draw_bar(time_slots["06-12"], max_slot_val, 28)}] {time_slots["06-12"]:3d} commits  │
-│  Afternoon(12-18)  [{draw_bar(time_slots["12-18"], max_slot_val, 28)}] {time_slots["12-18"]:3d} commits  │
-│  Evening  (18-24)  [{draw_bar(time_slots["18-24"], max_slot_val, 28)}] {time_slots["18-24"]:3d} commits  │
-└────────────────────────────────────────────────────────────────────────────┘
-┌─ [ Process Manager & Runtime Flags ] ──────────────────────────────────────┐
-│ ● brain.service - Dev Core Mentality Runtime Daemon                        │
-│   Loaded: active (running) since 2013-09-01 (Minecraft Server Genesis)     │
-│   Intent: [ {intent_str.ljust(64)} ] │
-│   Flags : [C++] [Python] [Kotlin] [TypeScript] [Linux Kernel Tuning] [OI]   │
-│   Clock : {current_time.ljust(66)} │
-└────────────────────────────────────────────────────────────────────────────┘"""
+    output.append("[Circadian Activity Rhythm]")
+    output.append(f"  Schedule:     {chronotype}\n")
+    
+    # 对齐时间段标签
+    slots_config = [
+        ("00-06 Midnight", "00-06"),
+        ("06-12 Morning", "06-12"),
+        ("12-18 Afternoon", "12-18"),
+        ("18-24 Evening", "18-24")
+    ]
+    for label, key in slots_config:
+        slot_label = visual_ljust(label, 16)
+        output.append(f"  {slot_label} [{draw_bar(time_slots[key], max_slot_val, 30)}] {str(time_slots[key]).rjust(3)} commits")
+    output.append("")
+        
+    output.append("[brain.service - Process Status]")
+    output.append(f"  Status:       active (running) since 2013-09-01 (Minecraft Server Genesis)")
+    output.append(f"  Intent:       {intent_str}")
+    output.append(f"  Flags:        [C++] [Python] [Kotlin] [TypeScript] [Linux Kernel Tuning] [OI]")
+    output.append("\n========================================================================")
 
+    tui_body = "\n".join(output)
     return f"{bt}text\n" + tui_body + f"\n{bt}"
 
 if __name__ == "__main__":
     content = analyze_profile()
     with open("README.md", "w", encoding="utf-8") as f:
         f.write(content)
-    print("[SUCCESS] TUI Panel rendered.")
+    print("[SUCCESS] Flattened TUI Panel rendered.")
