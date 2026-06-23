@@ -1,34 +1,27 @@
-### 👋 Hello World!  I'm HydroGest / MarkChai 
+```bash
+guest@github:~$ neofetch --user HydroGest
+       .---.         👤 Identity: YuriKale / 羽衣甘蓝 (a.k.a Markchai)
+      /     \        🏫 Role: Incoming CS Undergrad
+      \_.-./         📦 Public Repos: 60
+       `---'         ⭐ Total Stars: 51
+                     🐧 Environment: Linux SysAdmin / Paper Plugin / OI
+                     ⏰ Generated: 2026-06-23 17:13:59 UTC
 
-`💻 CS Learner` | `🎮 Minecraft Architect` | `🤖 AI Enthusiast`  
-`📝` [Tech Blog](https://blog.mkc.icu)  `🌌` [THFLS Computer Club](https://www.thfls.club/)  
+guest@github:~$ ./analyze_activity.sh --deep
 
-快来我开的 Minecraft 生电服务器：945228330
+[SYS] Indexing latest 100 public events...
+[INFO] Primary Code Environment: TypeScript, Python, JavaScript, HTML
+[INFO] Peak Productivity Window: Midnight (0-6)
+[INFO] Top Git Commits Intent:   N/A
 
----
+guest@github:~$ systemctl status brain.service
+● brain.service - Core Developer Mentality
+   Loaded: loaded
+   Active: active (running)
+   Main Status Metrics:
+   ├─ Core Stack:  [C++] [Python] [Kotlin] [TypeScript] [Linux Bash]
+   ├─ Frameworks:  [Paper] [Flask] [Vue] [Koishi] (and dynamic scaling...)
+   └─ SysAdmin:   [Kernel Tuning] [Minecraft Server Ops] [OI Background]
 
-#### 🛠️ Tech Stack
-![Python](https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white)
-![JavaScript](https://img.shields.io/badge/-JavaScript-F7DF1E?logo=javascript&logoColor=black)
-![Minecraft](https://img.shields.io/badge/-Minecraft-62B47A?logo=minecraft&logoColor=white)
-![Koishi](https://img.shields.io/badge/-Koishi-3EAF7C?logo=koishi&logoColor=white)
-![Vue](https://img.shields.io/badge/-Vue.js-4FC08D?logo=vue.js&logoColor=white)
-
----
-
-#### 🌟 Featured Projects
-
-[![YesImBot Repo Card](https://github-readme-stats.vercel.app/api/pin/?username=HydroGest&repo=YesImBot&theme=vue&show_owner=true)](https://github.com/HydroGest/YesImBot)  
-`🤖 AI-Powered Chatbot` | `⚡ Real-time NLP` | `🔒 Secure Architecture`
-
-[![GitScratch Repo Card](https://github-readme-stats.vercel.app/api/pin/?username=UniScratch&repo=GitScratch-Frontend&theme=vue&show_owner=true)](https://github.com/UniScratch/GitScratch-Frontend)  
-`🎮 Scratch Community` | `🚀 Modern Frontend` | `🌈 Open Source`
-
----
-
-#### 📊 Development Analytics
-
-![](https://github-readme-activity-graph.vercel.app/graph?username=HydroGest&theme=vue&area=true&hide_border=true)  
-
-| ![Hydro's Stats](https://github-readme-stats.vercel.app/api?username=HydroGest&theme=vue&show_icons=true&hide_border=true&count_private=true) | ![Hydro's Streak](https://github-readme-streak-stats.herokuapp.com/?user=HydroGest&theme=vue&hide_border=true) |
-|-------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+guest@github:~$ _
+```
